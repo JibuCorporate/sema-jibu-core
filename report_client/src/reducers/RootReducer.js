@@ -3,11 +3,14 @@ import {combineReducers} from 'redux';
 import healthCheck from './HealthcheckReducer';
 import auth from './AuthReducer';
 import kiosk from './KioskReducer';
-import waterOperations from './WaterOperationsReducer';
+import volume from './VolumeReducer';
 import sales from './SalesReducer';
+import customer from './CustomerReducer';
+import waterOperations from './WaterOperationsReducer';
 import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
 import storage from 'redux-persist/lib/storage';
 import { persistReducer } from 'redux-persist';
+import dateFilter from './DateFilterReducer';
 
 const rootPersistConfig = {
 	key: 'root',
@@ -36,8 +39,11 @@ const rootReducer = combineReducers({
     healthCheck,
 	auth,
 	kiosk: persistReducer(kioskPersistConfig, kiosk),
+	volume,
+	customer,
+	sales,
 	waterOperations,
-	sales
+	dateFilter
 });
 
 export default persistReducer(rootPersistConfig, rootReducer);

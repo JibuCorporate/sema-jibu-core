@@ -1,19 +1,20 @@
 import React, { Component } from 'react';
 import 'App.css';
-import SemaSummaryPanel1 from "./WaterQuality/SemaSummaryPanel1";
-import SeamaWaterProductionChart from "./WaterQuality/SeamaWaterProductionChart";
-import SeamaWaterChlorineChart from "./WaterQuality/SeamaWaterChlorineChart";
-import SeamaWaterTdsChart from "./WaterQuality/SeamaWaterTdsChart";
+import SemaSummaryPanel1 from "./WaterOperations/SemaSummaryPanel1";
+import SemaProductionChart from "./WaterOperations/SemaProductionChart";
+import SemaChlorineChart from "./WaterOperations/SemaChlorineChart";
+import SemaTDSChart from "./WaterOperations/SemaTDSChart";
 import 'css/SemaWaterOperations.css';
-import SeamaWaterQualityNavigation from "./WaterQuality/SeamaWaterQualityNavigation";
-import SeamaServiceError from "./SeamaServiceError";
-import SeamaDatabaseError from "./SeamaDatabaseError";
+// import SeamaWaterQualityNavigation from "./WaterQuality/SeamaWaterQualityNavigation";
+import SemaServiceError from "./SemaServiceError";
+import SemaDatabaseError from "./SemaDatabaseError";
 import {connect} from "react-redux";
 import {bindActionCreators} from "redux";
 import * as waterOperationsActions from 'actions/WaterOperationsActions';
 import * as healthCheckActions from 'actions/healthCheckActions';
 import { withRouter } from 'react-router'
-import SemaSummaryPanel2 from "./WaterQuality/SemaSummaryPanel2";
+import SemaSummaryPanel2 from "./WaterOperations/SemaSummaryPanel2";
+import LoadProgress from "./LoadProgress";
 
 class SemaWaterOperations extends Component {
 
@@ -22,9 +23,9 @@ class SemaWaterOperations extends Component {
     }
     showContent(props){
 		if( this.props.healthCheck.server !== "Ok" ){
-			return SeamaServiceError(props);
+			return SemaServiceError(props);
 		}else  if( this.props.healthCheck.database !== "Ok" ){
-			return SeamaDatabaseError(props)
+			return SemaDatabaseError(props)
 		}
         return this.showWaterOperations();
 
@@ -32,68 +33,77 @@ class SemaWaterOperations extends Component {
 
     showWaterOperations( ){
         return (
-            <div className="WaterQualityContainer">
-                <div className = "WaterOperationsSummaryContainer">
-					<div className = "WaterOperationsProduction">
-						<div className ="WaterOperationsSummaryItem">
-							<SemaSummaryPanel1 title="Total Production" units={"Gallons"}
-											   value={this.props.waterOperations.totalProduction.value}
+            <div className="WaterOperationsContainer" style = {this.getHeight()}>
+				<div className = "WaterSummaryProgress" style={{width:"100%", height:'100%'}}>
+					<LoadProgress/>
+				</div>
+                <div className = "WaterSummaryContainer">
+					<div className = "WaterProduction">
+						<div className ="WaterSummaryItem">
+							<SemaSummaryPanel1 title="Total Production" units={this.props.water.waterOperationsInfo.waterMeasureUnits}
+											   value={this.props.water.waterOperationsInfo.totalProduction}
 											   valueColor=""
-											   date={this.props.waterOperations.totalProduction.date}/>
+											   date={this.props.water.waterOperationsInfo.endDate}/>
 						</div>
 					</div>
-					<div className = "WaterOperationsWastage">
-						<div className ="WaterOperationsSummaryItem">
-							<SemaSummaryPanel1 title="Total Wastage" units={"Gallons"}
+					<div className = "WaterWastage">
+						<div className ="WaterSummaryItem">
+							<SemaSummaryPanel1 title="Total Wastage" units={this.props.water.waterOperationsInfo.waterMeasureUnits}
 											   value={this.calculateWastage()}
 											   valueColor="red"
-											   date={this.props.waterOperations.fillStation.date}/>
+											   date={this.props.water.waterOperationsInfo.endDate}/>
 						</div>
 					</div>
-					<div className = "WaterOperationsPressure">
-						<div className = "WaterOperationsSummaryItem2">
-							<SemaSummaryPanel2 data={this.props.waterOperations}
-											   type="pressure"/>
+					<div className = "WaterPressure">
+						<div className = "WaterSummaryItem2">
+							<SemaSummaryPanel2 data={this.props.water.waterOperationsInfo} type="pressure"/>
 						</div>
 					</div>
 
-					<div className = "WaterOperationsFlow">
-						<div className = "WaterOperationsSummaryItem2">
-							<SemaSummaryPanel2 data={this.props.waterOperations}
-											   type="flowrate"/>
+					<div className = "WaterFlow">
+						<div className = "WaterSummaryItem2">
+							<SemaSummaryPanel2 data={this.props.water.waterOperationsInfo} type="flowrate"/>
 						</div>
 					</div>
                 </div>
-                <div className ="WaterQualityNavigtionItem">
-                    <SeamaWaterQualityNavigation/>
-                </div>
-                <div className = "WaterQualityChartContainer">
-                    <div className= "WaterQualityMainChartItem">
-                        <SeamaWaterProductionChart chartData={this.props.waterOperations.production}/>
+                {/*<div className ="WaterQualityNavigtionItem">*/}
+                    {/*<SeamaWaterQualityNavigation/>*/}
+                {/*</div>*/}
+                <div className = "WaterChartContainer">
+                    <div className= "WaterMainChartItem">
+                        <SemaProductionChart chartData={this.props.water.waterOperationsInfo.production}/>
                     </div>
-                    <div className= "WaterQualitySecondaryChart1Item">
-                        <SeamaWaterChlorineChart chartData={this.props.waterOperations.chlorine}/>
+                    <div className= "WaterSecondaryChart1Item">
+                        <SemaChlorineChart chartData={this.props.water.waterOperationsInfo.chlorine}/>
                     </div>
-                    <div className= "WaterQualitySecondaryChart2Item">
-                        <SeamaWaterTdsChart chartData={this.props.waterOperations.tds}/>
+                    <div className= "WaterSecondaryChart2Item">
+                        <SemaTDSChart chartData={this.props.water.waterOperationsInfo.tds}/>
                     </div>
                 </div>
             </div>
         );
     }
     calculateWastage(){
-    	if( this.props.waterOperations.totalProduction.value === "N/A" ||
-			this.props.waterOperations.fillStation.value === "N/A" ){
-    		return "N/A";
+    	if( !this.props.water.waterOperationsInfo.totalProduction ||
+			!this.props.water.waterOperationsInfo.fillStation ){
+    		return null;
 		}else{
-    		return this.props.waterOperations.totalProduction.value - this.props.waterOperations.fillStation.value;
+    		return this.props.water.waterOperationsInfo.totalProduction - this.props.water.waterOperationsInfo.fillStation;
 		}
 	}
+	getHeight(){
+		let windowHeight = window.innerHeight;
+		// TODO 52px is the height of the toolbar. (Empirical)
+		windowHeight -= 52;
+		let height = windowHeight.toString()+'px';
+		return {height:height}
+	}
+
 }
 
 function mapStateToProps(state) {
 	return {
-		waterOperations:state.waterOperations,
+		water:state.waterOperations,
 		healthCheck: state.healthCheck
 	};
 }

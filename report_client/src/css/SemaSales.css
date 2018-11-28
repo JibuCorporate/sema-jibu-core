@@ -6,18 +6,23 @@
 
 }
 
+.SalesProgress {
+	grid-column: 1;
+	grid-row:1;
+	display: flex;
+}
 
 .SalesContainer {
 	grid-column: 2;
 	grid-row:2;
 	display: grid;
-	grid-template-rows: 140px auto;
+	grid-template-rows: 5px 140px auto;
 	background-color: rgb(240, 240, 240 );
 
 }
 .SalesSummaryContainer {
 	grid-column: 1;
-	grid-row:1;
+	grid-row:2;
 	display: grid;
 	grid-template-columns:	auto auto auto;
 	background-color: rgb(240, 240, 0 );
@@ -51,10 +56,10 @@
 
 .SalesContentContainer {
 	grid-column: 1;
-	grid-row:2;
+	grid-row:3;
 	display: grid;
 	grid-template-columns:	1fr 350px ;
-	grid-template-rows:  1fr 1fr ;
+	grid-template-rows:  62vh 1fr ;
 	grid-gap:5px;
 	background: rgb(40,88,167);
 	padding:10px;
@@ -64,7 +69,7 @@
 .SalesMapItem {
 	grid-row: 1;
 	grid-column: 1;
-	height: 62vh;
+	/*height: 62vh;*/
 	background: #fff;
 }
 .SalesListItem {
@@ -72,16 +77,16 @@
 	grid-column: 2;
 	background:white;
 	overflow-y: scroll;
-	height: 62vh;
+	/*height: 62vh;*/
 }
 
 .SalesBottomContainer {
 	grid-row: 2;
 	grid-column: 1 /span 2;
 	display: grid;
-	background:hotpink;
-	grid-template-columns:	220px 1fr ;
-	grid-template-rows:  1fr 1fr 1fr ;
+	background:rgb(171, 193,222 );
+	grid-template-columns:	1fr 1fr ;
+	grid-template-rows:  1fr 1fr ;
 
 }
 .SalesBottomLeftTop {
@@ -100,8 +105,16 @@
 	background:rgb(171, 193,222 );
 }
 .SalesBottomRight {
-	grid-row: 1 /span 3;
+	grid-row: 1 /span 2;
 	grid-column: 2;
 	background:white;
+	margin-left: 2px;
+
+}
+.SalesBottomLeft {
+	grid-row: 1 /span 2;
+	grid-column: 1;
+	background:white;
+	margin-right: 2px;
 
 }

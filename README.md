@@ -44,14 +44,14 @@ The client is a React application
 In development mode, the dashboard server runs on locathost:3001 and the React App on port 3000. REST calls from the app to the server are proxied through port 3001.
 
 ## Android build
-The Android POS application is a React-Native application used by Jibu to record sales of water products
+The Android POS application is a React-Native application used by the SWE to record sales of water products
 To build the POS application:
 * Follow the Android setup steps at: https://facebook.github.io/react-native/docs/getting-started.html#content. Make sure you select the appropriate tabs in the instructions. 
 "Building Projects with **Native Code**"
 "Development OS: **macOS** or **Windows** or **Linux** Target OS:  **Android**"
-* Change to folder jib_pos `cd jibu_pos`
+* Change to folder mobile_client `cd mobile_client`
 * Install dependencies `yarn install`
-* Open the Android project in the folder jibu_pos with Android Studio. Note. Do not open the folder jibu_pos, open **jibu_pos/android**
+* Open the Android project in the folder mobile_client with Android Studio. Note. Do not open the folder mobile_client, open **mobile_client/android**
 Build the project from Build menu
 * Additional instructions for debugging can be found at with JetBrains WebStorm and Visual Studio Code can be found at https://dlohaiti.atlassian.net/wiki/spaces/DLODOC/pages/34078783/React+Native+on+Android?atlOrigin=eyJpIjoiNGFmMDEwNGVjMTYwNDNhMWJkODZmODgzODQ5NzJiNjIiLCJwIjoiYyJ9
 
@@ -76,22 +76,23 @@ Our servers are in Linux so installation methods will be for GNU/Linux:
 
 Follow those steps to deploy this app in production mode:
  
-* Assuming you are in the root directory of this project
-* Install client dependencies: `cd report_client && yarn`
-* Build the client: `yarn build`
-* Create a new `public_react` folder into the server directory: `mkdir ../report_server/public_react`
-* Copy the entire build folder from react_client/build to the report_server/public_react folder:
+1. Assuming you are in the root directory of this project
+2. Install client dependencies: `cd report_client && yarn`
+3. Build the client: `yarn build`
+4. If you get a fatal error about not having enough memory, just add this - `GENERATE_SOURCEMAP=false` - to the .env file of the `report_client` directory and then run `yarn build` again: `echo 'GENERATE_SOURCEMAP=false' >> .env && yarn build`
+5. Create a new `public_react` folder into the server directory: `mkdir ../report_server/public_react`
+6. Copy the entire build folder from react_client/build to the report_server/public_react folder:
      `cp -rf ./build ../report_server/public_react`
-* Switch to server directory: `cd ../report_server`
-* Follow [the instructions below](#env-files) to create the environment variables file needed by the project
-* Install server dependencies: `yarn`
-* Start the server with Pm2: `pm2 start bin/www --name sema-server`. Name it however you want so you can easily refer to it later
-* Get your server IP address: `curl icanhazip.com`
-* Test the server access via curl - Since we haven't configured Nginx yet, we'll test it from port 3001: `curl http://YOUR-SERVER-IP-ADDRESS:3001/untapped/health-check`. This should return {"server":"Ok","database":"Ok"}
-* Setup Ngninx using [this tutorial](https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-16-04)
-* Configure Nginx by editing - *WITH SUPER USER*: `/etc/nginx/sites-available/default`:
+7. Switch to server directory: `cd ../report_server`
+8. Follow [the instructions below](#env-files) to create the environment variables file needed by the project
+9. Install server dependencies: `yarn`
+10. Start the server with Pm2: `pm2 start bin/www --name sema-server`. Name it however you want so you can easily refer to it later
+11. Get your server IP address: `curl icanhazip.com`
+12. Test the server access via curl - Since we haven't configured Nginx yet, we'll test it from port 3001: `curl http://YOUR-SERVER-IP-ADDRESS:3001/untapped/health-check`. This should return {"server":"Ok","database":"Ok"}
+13. Setup Ngninx using [this tutorial](https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-16-04)
+14. Configure Nginx by editing - *WITH SUPER USER*: `/etc/nginx/sites-available/default`:
     `sudo vim /etc/nginx/sites-available/default`
-* Within the server block, there is an existing `location /` block. Replace the contents of that block with the following configuration:
+15. Within the server block, there is an existing `location /` block. Replace the contents of that block with the following configuration:
 
 
 ```
@@ -104,9 +105,9 @@ location / {
 	proxy_cache_bypass $http_upgrade;
 }
 ```
-* Make sure you didn't introduce any syntax errors: `sudo nginx -t`
-* Restart Nginx: `sudo systemctl restart nginx`
-* Test the server access without using the port: `curl http://YOUR-SERVER-IP-ADDRESS/untapped/health-check`. This should return {"server":"Ok","database":"Ok"}. You can now setup DNS zone records for your server.
+16. Make sure you didn't introduce any syntax errors: `sudo nginx -t`
+17. Restart Nginx: `sudo systemctl restart nginx`
+18. Test the server access without using the port: `curl http://YOUR-SERVER-IP-ADDRESS/untapped/health-check`. This should return {"server":"Ok","database":"Ok"}. You can now setup DNS zone records for your server.
 
 ## .env files
 To accommodate development/test/production environments, a '.env' configuration file is used to specify database connection information and other configuration parameters.

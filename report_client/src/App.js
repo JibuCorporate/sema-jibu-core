@@ -6,8 +6,10 @@ import {bindActionCreators} from "redux";
 import {
 	authActions,
 	kioskActions,
-	waterOperationsActions,
-	salesActions
+	volumeActions,
+	customerActions,
+	salesActions,
+	waterOperationsActions
 } from 'actions';
 import { history } from './utils';
 import {
@@ -20,27 +22,40 @@ import {
 
 class App extends Component {
 	componentWillMount() {
+		document.body.style.backgroundColor = "rgb(24,55,106)";
 		let self = this;
-
+		window.addEventListener('resize', this.resize)
 		this.unlisten = history.listen((location, action) => {
+			let params = {}
+			params.startDate = this.props.dateFilter.startDate;
+			params.endDate = this.props.dateFilter.endDate;
+			params.groupBy = this.props.dateFilter.groupType;
+			if( this.props.kiosk.selectedKiosk && this.props.kiosk.selectedKiosk.kioskID ){
+				params.kioskID = this.props.kiosk.selectedKiosk.kioskID;
+			}
+
 			console.log("on route change", self);
 			switch( location.pathname ){
 				case "/":
-					if( ! this.props.waterOperations.loaded && this.props.kiosk.selectedKiosk && this.props.kiosk.selectedKiosk.kioskID  ){
-						this.props.waterOperationsActions.fetchWaterOperations(this.props.kiosk.selectedKiosk);
+
+					if( ! this.props.water.loaded && this.props.kiosk.selectedKiosk && this.props.kiosk.selectedKiosk.kioskID ) {
+						this.props.waterOperationsActions.fetchWaterOperations(params);
+					}
+					break;
+				case "/Volumes":
+					if( ! this.props.volume.loaded && this.props.kiosk.selectedKiosk && this.props.kiosk.selectedKiosk.kioskID  ){
+						this.props.volumeActions.fetchVolume(params);
+					}
+					break;
+				case "/Demographics":
+
+					if( ! this.props.customer.loaded && this.props.kiosk.selectedKiosk && this.props.kiosk.selectedKiosk.kioskID ) {
+						this.props.customerActions.fetchCustomer(params);
 					}
 					break;
 				case "/Sales":
-					// Hack to force the google map to update.
-					let self = this;
-
-					setTimeout(()=> {
-						self.props.salesActions.forceUpdate();
-					}, 100);
-
 					if( ! this.props.sales.loaded && this.props.kiosk.selectedKiosk && this.props.kiosk.selectedKiosk.kioskID ) {
-						this.props.kiosk.selectedKiosk.groupby = "month";	// // TODO - Should be derived from toolbar time/date filter UI
-						this.props.salesActions.fetchSales(this.props.kiosk.selectedKiosk);
+						this.props.salesActions.fetchSales(params);
 					}
 					break;
 				default:
@@ -50,18 +65,30 @@ class App extends Component {
 	}
 
 	componentWillUnmount() {
+		window.removeEventListener('resize', this.resize)
 		this.unlisten();
 	}
+	resize = () => this.forceUpdate();
 
 	render() {
 		return (
 			<Router history={ history }>
-				{this.props.auth.currentUser ?
+				{this.userIsValid() ?
 					<SemaContainer /> :
 					<SemaLogin />
 				}
 			</Router>
 		);
+	}
+	userIsValid(){
+		if( this.props.auth.currentUser ){
+			let now = Date.now()/1000;
+			if( now < this.props.auth.currentUser.exp ){
+				console.log("Token is valid - Proceed to home page");
+				return true;
+			}
+		}
+		return false;
 	}
 }
 
@@ -69,16 +96,21 @@ function mapDispatchToProps(dispatch) {
 	return {
 		authActions: bindActionCreators(authActions, dispatch),
 		kioskActions: bindActionCreators(kioskActions, dispatch),
-		waterOperationsActions: bindActionCreators(waterOperationsActions, dispatch),
-		salesActions: bindActionCreators(salesActions, dispatch)
+		volumeActions: bindActionCreators(volumeActions, dispatch),
+		customerActions: bindActionCreators(customerActions, dispatch),
+		salesActions: bindActionCreators(salesActions, dispatch),
+		waterOperationsActions: bindActionCreators(waterOperationsActions, dispatch)
 	};
 }
 
 function mapStateToProps(state) {
 	return {
 		kiosk: state.kiosk,
-		waterOperations: state.waterOperations,
-		sales: state.sales,
+		volume: state.volume,
+		customer: state.customer,
+		sales:state.sales,
+		water:state.waterOperations,
+		dateFilter:state.dateFilter,
 		auth: state.auth
 	};
 }

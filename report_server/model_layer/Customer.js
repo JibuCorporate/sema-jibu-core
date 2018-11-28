@@ -9,7 +9,6 @@ class Customer {
 		this._dueAmount = value;
 	}
 
-
 	constructor() {
 		this._id = "";
 		this._address = "";
@@ -22,6 +21,8 @@ class Customer {
 		this._updatedDate = null;
 		this._gender = null;
 		this._dueAmount = 0;
+		this._frequency = 3;
+		this._showReminders = true
 	}
 
 	databaseToClass(res) {
@@ -29,12 +30,15 @@ class Customer {
 		this._createdDate = new Date(res["created_at"]);
 		this._updatedDate = new Date(res["updated_at"]);
 		this._active = res["active"][0] === 1 ? true : false;
+		this._showReminders = res["show_reminders"][0] === 1 ? true : false;
 		this._address = res["address_line1"];
 		this._name = res["name"];
 		this._customerTypeId = res["customer_type_id"];
 		this._salesChannelId = res["sales_channel_id"];
 		this._siteId = res["kiosk_id"];
 		this._dueAmount = res["due_amount"];
+		this._frequency = res["frequency"]
+		
 		if( this._dueAmount === null ){
 			this._dueAmount = 0;
 		}
@@ -44,7 +48,6 @@ class Customer {
 			this.address_line2 = res["address_line2"];
 		if (res["address_line3"])
 			this.address_line3 = res["address_line3"];
-
 	}
 
 	requestToClass(req) {
@@ -55,6 +58,7 @@ class Customer {
 		this._salesChannelId = req.body["salesChannelId"];
 		this._siteId = req.body["siteId"];
 		this._active = true;
+		this._frequency = req.body["frequency"];
 
 		if (req.body.hasOwnProperty("customerId")) {
 			this._customerId = req.body["customerId"]
@@ -71,7 +75,6 @@ class Customer {
 		} else {
 			this._updatedDate = this._createdDate;
 		}
-
 
 		if (req.body.hasOwnProperty("gpsCoordinates")) {
 			this._gpsCoordinates = req.body["gpsCoordinates"];
@@ -115,8 +118,14 @@ class Customer {
 		if (requestCustomer.hasOwnProperty("active")) {
 			this._active = requestCustomer.active;
 		}
-
+		if (requestCustomer.hasOwnProperty("frequency")) {
+			this._frequency = requestCustomer.frequency;
+		}
+		if (requestCustomer.hasOwnProperty("showReminders")) {
+			this._showReminders = requestCustomer.showReminders;
+		}
 	}
+
 	classToPlain() {
 		return {
 			customerId: this._customerId,
@@ -131,6 +140,8 @@ class Customer {
 			siteId: this._siteId,
 			phoneNumber: this._phoneNumber,
 			dueAmount: this._dueAmount,
+			frequency: this._frequency,
+			showReminders: this._showReminders
 		};
 	}
 

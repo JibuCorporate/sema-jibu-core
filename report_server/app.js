@@ -1,6 +1,5 @@
 require('dotenv').config();
 
-
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -22,12 +21,25 @@ var sema_receipts = require('./routes/sema_receipts');
 var sema_sales_channels = require('./routes/sema_sales_channels');
 var sema_customer_types = require('./routes/sema_customer_types');
 var sema_product_mrps = require('./routes/sema_product_mrps');
+var sema_sales_by_channels_history = require('./routes/sema_sales_by_channel_history');
+var sema_receipt_summary = require('./routes/sema_receipt_summary');
+var sema_customer_summary = require('./routes/sema_customer_summary');
+var sema_sales_ex = require('./routes/sema_sales_ex');
+var sema_units = require('./routes/sema_units');
+var sema_water_chart = require('./routes/sema_water_chart');
+var sema_water_summary = require('./routes/sema_water_summary');
+
+
+var sema_users = require('./routes/sema_user');
 
 const winston = require('winston');
 
 const passport = require('passport');
 const configurePassport = require('./config/passport');
-const { isAuthenticated, isAuthorized } = require('./seama_services/auth_services');
+const {
+	isAuthenticated,
+	isAuthorized
+} = require('./seama_services/auth_services');
 const cors = require('cors');
 
 const { version } = require('./package.json');
@@ -56,6 +68,10 @@ app.use(express.static(path.join(__dirname, 'public_react/build/')));
 app.use(express.static(path.join('..', 'documentations')));
 
 app.use('/', index);
+app.use('/Sales', index);
+app.use('/Volumes', index);
+app.use('/Demographics', index);
+
 app.use('/untapped/health-check', seama_health_check);
 app.use('/untapped/login', seama_login);
 app.use('/untapped/kiosks', isAuthenticated, seama_kiosks);
@@ -66,12 +82,22 @@ app.use('/untapped/sales-by-channel', isAuthenticated, sema_sales_by_channel);
 app.use('/sema/health-check', seama_health_check);
 app.use('/sema/login', seama_login);
 app.use('/sema/kiosks', isAuthenticated, seama_kiosks);
-app.use('/sema/site/customers/', isAuthenticated,sema_customers);
+app.use('/sema/site/customers/', isAuthenticated, sema_customers);
 app.use('/sema/site/receipts/', sema_receipts);
 app.use('/sema/products/', isAuthenticated, sema_products);
 app.use('/sema/sales-channels/', isAuthenticated, sema_sales_channels);
 app.use('/sema/customer-types/', isAuthenticated, sema_customer_types);
 app.use('/sema/site/product-mrps/', isAuthenticated, sema_product_mrps);
+// TODO - Add 'isAuthenticated' below!!
+app.use('/sema/dashboard/site/sales-by-channel-history/', sema_sales_by_channels_history);
+app.use('/sema/dashboard/site/receipt-summary/', sema_receipt_summary);
+app.use('/sema/dashboard/site/customer-summary/', sema_customer_summary);
+app.use('/sema/dashboard/site/sales-summary/', sema_sales_ex);
+app.use('/sema/measure-units/', sema_units);
+app.use('/sema/dashboard/site/water-chart/', sema_water_chart);
+app.use('/sema/dashboard/site/water-summary/', sema_water_summary);
+
+app.use('/sema/users', isAuthenticated, sema_users);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

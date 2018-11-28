@@ -11,6 +11,19 @@ import {
 	kioskActions
 } from 'actions';
 
+// const ImageStyle = {
+// 	display: 'block',
+// 	marginLeft: '10%',
+// 	// marginRight: 'auto',
+// 	// paddingRight: "8%"
+//
+// 	// resize:"both",
+// 	// width:'100%',
+// 	// height:'100%',
+// 	// maxWidth: '100%',
+// 	// marginBottom: '5px'
+// };
+
 class SemaLogin extends Component {
 	constructor(props, context) {
 		super(props, context);
@@ -35,6 +48,10 @@ class SemaLogin extends Component {
 	render() {
 		return (
 			<div className="LogIn">
+				{/*<div>*/}
+					{/*{<img  src={require('images/swe-logo.png')} alt="logo" style={ImageStyle} />}*/}
+				{/*</div>*/}
+
 				<Form horizontal className="normal">
 					<FormGroup controlId="formUser">
 						<Col sm={10}>
@@ -91,7 +108,7 @@ class NoService extends Component {
 
 	render() {
 		return (
-			<Alert bsStyle="info" className={`${this.state.show} SeamaServiceError`} style={{textAlign:"center", height:"130px"}}>
+			<Alert bsStyle="info" className={`${this.state.show} SemaServiceError`} style={{textAlign:"center", height:"130px"}}>
 				<h4>{this.props.header}</h4>
 				<p>{this.props.message}</p>
 				<Button bsStyle="info" onClick={this.handleClick} style={{marginTop:"15px"}}>Ok</Button>

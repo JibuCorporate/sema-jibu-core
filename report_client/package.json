@@ -1,6 +1,6 @@
 {
   "name": "bootstrap_react",
-  "version": "0.0.0.7",
+  "version": "0.0.2.1",
   "private": true,
   "dependencies": {
     "axios": "^0.18.0",
@@ -21,7 +21,8 @@
     "react-spinners": "^0.2.6",
     "redux": "^4.0.0",
     "redux-persist": "^5.10.0",
-    "redux-thunk": "^2.2.0"
+    "redux-thunk": "^2.2.0",
+    "rc-progress":"~2.2.5"
   },
   "scripts": {
     "start": "react-scripts start",
