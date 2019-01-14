@@ -2,9 +2,11 @@
 import PosStorage from '../database/PosStorage';
 import Communications from '../services/Communications';
 import Events from "react-native-simple-events";
+import moment from 'moment';
+import * as _ from 'lodash';
 
 class Synchronization {
-	initialize( lastCustomerSync, lastProductSync, lastSalesSync){
+	initialize(lastCustomerSync, lastProductSync, lastSalesSync) {
 		console.log("Synchronization:initialize");
 		this.lastCustomerSync = lastCustomerSync;
 		this.lastProductSync = lastProductSync;
@@ -13,20 +15,20 @@ class Synchronization {
 		this.firstSyncId = null;
 		this.isConnected = false;
 	}
-	setConnected( isConnected ){
-		console.log( "Synchronization:setConnected - " + isConnected );
+	setConnected(isConnected) {
+		console.log("Synchronization:setConnected - " + isConnected);
 		this.isConnected = isConnected;
 	}
-	scheduleSync( ){
-		console.log( "Synchronization:scheduleSync - Starting synchronization" );
+	scheduleSync() {
+		console.log("Synchronization:scheduleSync - Starting synchronization");
 		let timeoutX = 10000; // Sync after 10 seconds
-		if( this.firstSyncId != null ){
-			clearTimeout( this.firstSyncId );
+		if (this.firstSyncId != null) {
+			clearTimeout(this.firstSyncId);
 		}
-		if( this.intervalId != null  ){
+		if (this.intervalId != null) {
 			clearInterval(this.intervalId);
 		}
-		if( PosStorage.getCustomers().length == 0 || PosStorage.getProducts().length == 0 ){
+		if (PosStorage.getCustomers().length == 0 || PosStorage.getProducts().length == 0) {
 			// No local customers or products, sync now
 			timeoutX = 1000;
 		}
@@ -34,31 +36,31 @@ class Synchronization {
 		let that = this;
 		this.firstSyncId = setTimeout(() => {
 			console.log("Synchronizing...");
-			that.doSynchronize( );
+			that.doSynchronize();
 		}, timeoutX);
 		let syncInterval = PosStorage.getGetSyncInterval();
 		console.log("Synchronization interval (ms)" + syncInterval);
-		this.intervalId = setInterval( ()=>{
+		this.intervalId = setInterval(() => {
 			that.doSynchronize();
 		}, syncInterval);
 	}
-	updateLastCustomerSync(){
+	updateLastCustomerSync() {
 		this.lastCustomerSync = new Date();
-		PosStorage.setLastCustomerSync( this.lastCustomerSync );
+		PosStorage.setLastCustomerSync(this.lastCustomerSync);
 	}
-	updateLastProductSync(){
+	updateLastProductSync() {
 		this.lastProductSync = new Date();
-		PosStorage.setLastProductSync( this.lastProductSync );
+		PosStorage.setLastProductSync(this.lastProductSync);
 	}
-	updateLastSalesSync(){
+	updateLastSalesSync() {
 		this.lastSalesSync = new Date();
-		PosStorage.setLastSalesSync( this.lastSalesSync );
+		PosStorage.setLastSalesSync(this.lastSalesSync);
 	}
-	doSynchronize( ){
-		if( this.isConnected ) {
+	doSynchronize() {
+		if (this.isConnected) {
 			this.synchronize();
-		}else{
-			console.log( "Communications:doSynchronize - Won't sync - Network not connected");
+		} else {
+			console.log("Communications:doSynchronize - Won't sync - Network not connected");
 		}
 	}
 	synchronize(){
@@ -67,6 +69,7 @@ class Synchronization {
 			try {
 				this._refreshToken().then(() => {
 					let lastProductSync = this.lastProductSync;
+					this.synchronizeReceipts();
 					const promiseSalesChannels = this.synchronizeSalesChannels();
 					const promiseCustomerTypes = this.synchronizeCustomerTypes();
 					Promise.all([promiseSalesChannels, promiseCustomerTypes])
@@ -115,72 +118,75 @@ class Synchronization {
 		});
 
 	}
-	synchronizeCustomers(){
-		return new Promise( resolve => {
-		console.log( "Synchronization:synchronizeCustomers - Begin" );
-		Communications.getCustomers( this.lastCustomerSync )
-			.then( web_customers => {
-				if (web_customers.hasOwnProperty("customers")) {
-					this.updateLastCustomerSync();
-					console.log( "Synchronization:synchronizeCustomers No of new remote customers: " + web_customers.customers.length);
-					// Get the list of customers that need to be sent to the server
-					let { pendingCustomers, updated} = PosStorage.mergeCustomers( web_customers.customers );
-					console.log( "Synchronization:synchronizeCustomers No of local pending customers: " + pendingCustomers.length);
-					resolve( {error:null, localCustomers:  pendingCustomers.length, remoteCustomers: web_customers.customers.length});
-					pendingCustomers.forEach(customerKey => {
-						PosStorage.getCustomerFromKey(customerKey)
-							.then( customer => {
-								if (customer != null) {
-									if (customer.syncAction === "create") {
-										console.log("Synchronization:synchronizeCustomers -creating customer - " + customer.name);
-										Communications.createCustomer(customer)
-											.then(() => {
-												console.log("Synchronization:synchronizeCustomers - Removing customer from pending list - " + customer.name);
-												PosStorage.removePendingCustomer(customerKey)
-											})
-											.catch(error => console.log("Synchronization:synchronizeCustomers Create Customer failed"));
-									} else if (customer.syncAction === "delete") {
-										console.log("Synchronization:synchronizeCustomers -deleting customer - " + customer.name);
-										Communications.deleteCustomer(customer)
-											.then(() => {
-												console.log("Synchronization:synchronizeCustomers - Removing customer from pending list - " + customer.name);
-												PosStorage.removePendingCustomer(customerKey)
-											})
-											.catch(error => console.log("Synchronization:synchronizeCustomers Delete Customer failed " + error));
+	synchronizeCustomers() {
+		return new Promise(resolve => {
+			console.log("Synchronization:synchronizeCustomers - Begin");
+			Communications.getCustomers(this.lastCustomerSync)
+				.then(web_customers => {
+					if (web_customers.hasOwnProperty("customers")) {
+						this.updateLastCustomerSync();
+						console.log("Synchronization:synchronizeCustomers No of new remote customers: " + web_customers.customers.length);
+						// Get the list of customers that need to be sent to the server
+						let { pendingCustomers, updated } = PosStorage.mergeCustomers(web_customers.customers);
+						console.log("Synchronization:synchronizeCustomers No of local pending customers: " + pendingCustomers.length);
+						resolve({ error: null, localCustomers: pendingCustomers.length, remoteCustomers: web_customers.customers.length });
+						pendingCustomers.forEach(customerKey => {
+							PosStorage.getCustomerFromKey(customerKey)
+								.then(customer => {
+									if (customer != null) {
+										if (customer.syncAction === "create") {
+											console.log("Synchronization:synchronizeCustomers -creating customer - " + customer.name);
+											Communications.createCustomer(customer)
+												.then(() => {
+													console.log("Synchronization:synchronizeCustomers - Removing customer from pending list - " + customer.name);
+													PosStorage.removePendingCustomer(customerKey)
+												})
+												.catch(error => console.log("Synchronization:synchronizeCustomers Create Customer failed"));
+										} else if (customer.syncAction === "delete") {
+											console.log("Synchronization:synchronizeCustomers -deleting customer - " + customer.name);
+											Communications.deleteCustomer(customer)
+												.then(() => {
+													console.log("Synchronization:synchronizeCustomers - Removing customer from pending list - " + customer.name);
+													PosStorage.removePendingCustomer(customerKey)
+												})
+												.catch(error => console.log("Synchronization:synchronizeCustomers Delete Customer failed " + error));
 
-									} else if (customer.syncAction === "update") {
-										console.log("Synchronization:synchronizeCustomers -updating customer - " + customer.name);
-										Communications.updateCustomer(customer)
-											.then(() => {
-												console.log("Synchronization:synchronizeCustomers - Removing customer from pending list - " + customer.name);
-												PosStorage.removePendingCustomer(customerKey)
-											})
-											.catch(error => console.log("Synchronization:synchronizeCustomers Update Customer failed " + error));
+										} else if (customer.syncAction === "update") {
+											console.log("Synchronization:synchronizeCustomers -updating customer - " + customer.name);
+											Communications.updateCustomer(customer)
+												.then(() => {
+													console.log("Synchronization:synchronizeCustomers - Removing customer from pending list - " + customer.name);
+													PosStorage.removePendingCustomer(customerKey)
+												})
+												.catch(error => console.log("Synchronization:synchronizeCustomers Update Customer failed " + error));
 
+										}
+
+									} else {
+										PosStorage.removePendingCustomer(customerKey);
 									}
-
-								} else {
-									PosStorage.removePendingCustomer(customerKey);
-								}
-							});
-					});
-					if( updated ){
-						Events.trigger('CustomersUpdated', {} );
+								});
+						});
+						if (updated) {
+							Events.trigger('CustomersUpdated', {});
+						}
 					}
-				}
-			})
-			.catch(error => {
-				console.log( "Synchronization.getCustomers - error " + error);
-				resolve( {error:error.message, localCustomers:  null, remoteCustomers:null});
-			});
+				})
+				.catch(error => {
+					console.log("Synchronization.getCustomers - error " + error);
+					resolve({ error: error.message, localCustomers: null, remoteCustomers: null });
+				});
 		});
 	}
-	synchronizeProducts(){
-		return new Promise( resolve => {
+	synchronizeProducts() {
+		return new Promise(resolve => {
 			console.log("Synchronization:synchronizeProducts - Begin");
-			Communications.getProducts(this.lastProductSync)
+			// Temporary get rid of this.lastProductSync
+			// TODO: Figure out why it wouldn't pull new products when using this.lastProductSync
+			Communications.getProducts()
 				.then(products => {
-					resolve( {error:null, remoteProducts: products.products.length});
+					resolve({ error: null, remoteProducts: products.products.length });
+
 					if (products.hasOwnProperty("products")) {
 						this.updateLastProductSync();
 						console.log("Synchronization:synchronizeProducts. No of new remote products: " + products.products.length);
@@ -188,17 +194,16 @@ class Synchronization {
 						if (updated) {
 							Events.trigger('ProductsUpdated', {});
 						}
-
 					}
 				})
 				.catch(error => {
-					resolve( {error:error.message, remoteProducts: null});
+					resolve({ error: error.message, remoteProducts: null });
 					console.log("Synchronization.getProducts - error " + error);
 				});
 		});
 	}
 
-	synchronizeSalesChannels(){
+	synchronizeSalesChannels() {
 		return new Promise(async resolve => {
 			console.log("Synchronization:synchronizeSalesChannels - Begin");
 			const savedSalesChannels = await PosStorage.loadSalesChannels();
@@ -206,8 +211,7 @@ class Synchronization {
 				.then(salesChannels => {
 					if (salesChannels.hasOwnProperty("salesChannels")) {
 						console.log("Synchronization:synchronizeSalesChannels. No of sales channels: " + salesChannels.salesChannels.length);
-						// TODO: Not a totally good idea because there might be name changes, not just removals and additions
-						if (savedSalesChannels.length !== salesChannels.salesChannels.length) {
+						if (!_.isEqual(savedSalesChannels, salesChannels.salesChannels)) {
 							PosStorage.saveSalesChannels(salesChannels.salesChannels);
 							Events.trigger('SalesChannelsUpdated', {});
 						}
@@ -220,8 +224,8 @@ class Synchronization {
 				});
 		});
 	}
-	synchronizeCustomerTypes(){
-		return new Promise((resolve ) => {
+	synchronizeCustomerTypes() {
+		return new Promise((resolve) => {
 			console.log("Synchronization:synchronizeCustomerTypes - Begin");
 			Communications.getCustomerTypes()
 				.then(customerTypes => {
@@ -229,22 +233,22 @@ class Synchronization {
 						console.log("Synchronization:synchronizeCustomerTypes. No of customer types: " + customerTypes.customerTypes.length);
 						PosStorage.saveCustomerTypes(customerTypes.customerTypes);
 					}
-					resolve( customerTypes);
+					resolve(customerTypes);
 				})
 				.catch(error => {
 					console.log("Synchronization.getCustomerTypes - error " + error);
-					resolve( null);
+					resolve(null);
 				});
 		});
 	}
 
-	synchronizeSales(){
-		return new Promise( resolve => {
+	synchronizeSales() {
+		return new Promise(resolve => {
 			console.log("Synchronization:synchronizeSales - Begin");
 			PosStorage.loadSalesReceipts(this.lastSalesSync)
 				.then(salesReceipts => {
 					console.log("Synchronization:synchronizeSales - Number of sales receipts: " + salesReceipts.length);
-					resolve( {error:null, localReceipts:  salesReceipts.length});
+					resolve({ error: null, localReceipts: salesReceipts.length });
 					salesReceipts.forEach((receipt) => {
 						Communications.createReceipt(receipt.sale)
 							.then(result => {
@@ -253,7 +257,7 @@ class Synchronization {
 							})
 							.catch(error => {
 								console.log("Synchronization:synchronizeCustomers Create receipt failed: error-" + error);
-								if( error === 400){
+								if (error === 400) {
 									// This is unre-coverable... remove the pending sale
 									PosStorage.removePendingSale(receipt.key);
 								}
@@ -261,29 +265,104 @@ class Synchronization {
 					})
 				})
 				.catch(error => {
-					resolve( {error:error.message, localReceipts: null});
+					resolve({ error: error.message, localReceipts: null });
 					console.log("Synchronization.synchronizeSales - error " + error);
 				});
 		});
 	}
-	synchronizeProductMrps( lastProductSync){
-		return new Promise( resolve => {
+
+	// NOTE: This used to be in the promise chain in the `synchronize` function, that's why
+	// it's returning a promise with some weird results. I decided to keep it this way just
+	// in case we ever decide to add it back in there - for sync results on the UI.
+	async synchronizeReceipts() {
+		let settings = PosStorage.getSettings();
+		let remoteReceipts = await PosStorage.loadRemoteReceipts() || [];
+		let updatedReceipts = remoteReceipts.filter(receipt => receipt.updated).map(receipt => {
+			lineItems = [];
+
+			if (receipt.updatedLineItem) {
+				lineItems = receipt.receipt_line_items.filter(lineItem => lineItem.updated).map(lineItem => {
+					return {
+						id: lineItem.id,
+						active: lineItem.active
+					}
+				});
+			}
+
+			return {
+				id: receipt.id,
+				active: receipt.active,
+				lineItems
+			}
+		});
+
+		// TODO: Also, make this chunk more modular
+		if (updatedReceipts.length) {
+			console.dir(updatedReceipts);
+			return Communications.sendUpdatedReceipts(updatedReceipts)
+				.then(() => {
+					return new Promise(resolve => {
+						Communications.getReceipts(settings.siteId)
+							.then(receipts => {
+								PosStorage.saveRemoteReceipts(receipts);
+								console.log(receipts.length);
+								resolve({
+									error: null,
+									receipts: receipts.length
+								});
+								Events.trigger('ReceiptsFetched', receipts);
+							})
+							.catch(error => {
+								resolve({ error: error.message, receipts: null });
+								console.log("Synchronization.synchronizeReceipts - error " + error);
+							})
+					});
+				});
+		} else {
+			return new Promise(resolve => {
+				Communications.getReceipts(settings.siteId)
+					.then(receipts => {
+						PosStorage.saveRemoteReceipts(receipts);
+						resolve({
+							error: null,
+							receipts: receipts.length
+						});
+						Events.trigger('ReceiptsFetched', receipts);
+					})
+					.catch(error => {
+						resolve({ error: error.message, receipts: null });
+						console.log("Synchronization.synchronizeReceipts - error " + error);
+					})
+			});
+		}
+	}
+
+	synchronizeProductMrps(lastProductSync) {
+		return new Promise(async resolve => {
 			console.log("Synchronization:synchronizeProductMrps - Begin");
 			// Note- Because product mrps, do not currently have an 'active' flag,
 			// if a user 'deletes' a mapping by removing the row in the table, the delta won't get detected
 			// The current work around is return all mappings, (i.e. no deltas and re-write the mappings each time
 			// Note that this won't scale too well with many productMrps
 			// Communications.getProductMrps(lastProductSync)
-			Communications.getProductMrps()
+			const savedProductMrps = await PosStorage.loadProductMrps();
+			// We're getting all product mappings instead of just the ones associated with the
+			// selected kiosk. We need this to be able to know if a product doesn't have a mapping
+			// with a different kiosk.
+			// TODO: Figure out a more scalable approach to this. As the product_mrp table may grow fast.
+			Communications.getProductMrps(null, true)
 				.then(productMrps => {
 					if (productMrps.hasOwnProperty("productMRPs")) {
-						resolve( {error:null, remoteProductMrps: productMrps.productMRPs.length});
 						console.log("Synchronization:synchronizeProductMrps. No of remote product MRPs: " + productMrps.productMRPs.length);
-						PosStorage.saveProductMrps(productMrps.productMRPs);
+						if (!_.isEqual(savedProductMrps, productMrps.productMRPs)) {
+							PosStorage.saveProductMrps(productMrps.productMRPs);
+							Events.trigger('ProductMrpsUpdated', {});
+						}
+						resolve({ error: null, remoteProductMrps: productMrps.productMRPs.length });
 					}
 				})
 				.catch(error => {
-					resolve( {error:error.message, remoteProducts: null});
+					resolve({ error: error.message, remoteProducts: null });
 					console.log("Synchronization.ProductsMrpsUpdated - error " + error);
 				});
 		});
@@ -308,20 +387,20 @@ class Synchronization {
 
 	_refreshToken(){
 		// Check if token exists or has expired
-		return new Promise((resolve, reject ) => {
+		return new Promise((resolve, reject) => {
 			let settings = PosStorage.getSettings();
 			let tokenExpirationDate = PosStorage.getTokenExpiration();
 			let currentDateTime = new Date();
 
-			if( settings.token.length == 0 ||currentDateTime > tokenExpirationDate ){
+			if (settings.token.length == 0 || currentDateTime > tokenExpirationDate) {
 				// Either user has previously logged out or its time for a new token
 				console.log("No token or token has expired - Getting a new one");
 				Communications.login()
 					.then(result => {
 						if (result.status === 200) {
 							console.log("New token Acquired");
-							PosStorage.saveSettings( settings.semaUrl, settings.site, settings.user,
-								settings.password, settings.uiLanguage, result.response.token, settings.siteId );
+							PosStorage.saveSettings(settings.semaUrl, settings.site, settings.user,
+								settings.password, settings.uiLanguage, result.response.token, settings.siteId);
 							Communications.setToken(result.response.token);
 							PosStorage.setTokenExpiration();
 						}
@@ -329,10 +408,10 @@ class Synchronization {
 					})
 					.catch(result => {
 						console.log("Failed- status " + result.status + " " + result.response);
-						reject( result.response );
+						reject(result.response);
 					})
 
-			}else{
+			} else {
 				console.log("Existing token is valid");
 				resolve();
 			}
@@ -340,4 +419,4 @@ class Synchronization {
 	}
 
 }
-export default  new Synchronization();
+export default new Synchronization();

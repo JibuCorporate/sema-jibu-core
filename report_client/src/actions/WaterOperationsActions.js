@@ -16,6 +16,8 @@ function initializeWaterOperations() {
 			beginDate:null,
 			endDate:null,
 			waterMeasureUnits: 'liters',
+			waterFlowrateUnits: 'lpm',
+			waterPressureUnits: 'PSI',
 			totalProduction: null,
 			fillStation: null,
 			pressurePreMembrane: null,
@@ -24,6 +26,7 @@ function initializeWaterOperations() {
 			flowRateSource: null,
 			flowRateDistribution: null,
 			production: {},
+			fill:{},
 			chlorine: {},
 			tds: {}
 		}
@@ -47,6 +50,8 @@ const fetchWaterOperationsData = ( params) => {
 		try {
 			window.dispatchEvent(new CustomEvent("progressEvent", {detail: {progressPct:0}} ));
 			let summary = await fetchSummary(params );
+			waterInfo.waterOperationsInfo.waterMeasureUnits = summary.productionUnit;
+			waterInfo.waterOperationsInfo.waterFlowrateUnits = summary.flowrateUnit;
 			waterInfo.waterOperationsInfo.totalProduction = summary.totalProduction;
 			waterInfo.waterOperationsInfo.fillStation = summary.fillStation;
 			waterInfo.waterOperationsInfo.pressurePostMembrane = summary.pressurePostMembrane;
@@ -55,7 +60,7 @@ const fetchWaterOperationsData = ( params) => {
 			waterInfo.waterOperationsInfo.flowRateDistribution = summary.distributionFlowRate;
 			waterInfo.waterOperationsInfo.flowRateProduct = summary.productFlowRate;
 
-			window.dispatchEvent(new CustomEvent("progressEvent", {detail: {progressPct:25}} ));
+			window.dispatchEvent(new CustomEvent("progressEvent", {detail: {progressPct:20}} ));
 
 
 			let production = Object.assign({}, params);
@@ -67,12 +72,17 @@ const fetchWaterOperationsData = ( params) => {
 				groupBy = "month";
 			}
 			waterInfo.waterOperationsInfo.production = await fetchChart(production, groupBy );
-			window.dispatchEvent(new CustomEvent("progressEvent", {detail: {progressPct:50}} ));
+			window.dispatchEvent(new CustomEvent("progressEvent", {detail: {progressPct:40}} ));
+
+			let fill = Object.assign({}, params);
+			fill.type = "fill";
+			waterInfo.waterOperationsInfo.fill = await fetchChart(fill, groupBy );
+			window.dispatchEvent(new CustomEvent("progressEvent", {detail: {progressPct:60}} ));
 
 			let chlorine = Object.assign({}, params);
 			chlorine.type = "totalchlorine";
 			waterInfo.waterOperationsInfo.chlorine = await fetchChart(chlorine, null );
-			window.dispatchEvent(new CustomEvent("progressEvent", {detail: {progressPct:75}} ));
+			window.dispatchEvent(new CustomEvent("progressEvent", {detail: {progressPct:80}} ));
 
 			let tds = Object.assign({}, params);
 			tds.type = "tds";

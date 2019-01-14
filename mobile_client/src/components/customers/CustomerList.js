@@ -103,16 +103,16 @@ class CustomerList extends Component {
 					(names.length > 1 && names[names.length-1].startsWith(filterString)) ||
 					item.phoneNumber.startsWith(filterString)) {
 
-					return this.props.filter === 'all' ||
-						(this.props.filter === "credit" && item.dueAmount > 0) ||
+					return this.props.filter === i18n.t('all') ||
+						(this.props.filter === i18n.t('credit') && item.dueAmount > 0) ||
 						this.props.filter === salesChannel;
 				} else {
 					return false;
 				}
 			}
 
-			return this.props.filter === 'all' ||
-			(this.props.filter === "credit" && item.dueAmount > 0) ||
+			return this.props.filter === i18n.t('all') ||
+			(this.props.filter === i18n.t('credit') && item.dueAmount > 0) ||
 			this.props.filter === salesChannel;
 		});
 		return filteredItems;
@@ -168,7 +168,7 @@ class CustomerList extends Component {
 				return salesChannels[i].name;
 			}
 		}
-		return "walkup";
+		return "direct";
 	}
 
 	_isAnonymousCustomer( customer ){
