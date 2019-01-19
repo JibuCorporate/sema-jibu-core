@@ -542,7 +542,7 @@ class PosStorage {
 						if (error) {
 							console.log("error removing " + oldest.saleKey);
 						} else {
-							// Events.trigger('LocalReceiptsUpdated');
+							Events.trigger('RemoveLocalReceipt', saleItemKey + saleDateKey);
 							console.log("Removed " + oldest.saleKey)
 						}
 					});
@@ -608,27 +608,25 @@ class PosStorage {
 					return console.log("PosStorage:removePendingSale: Error: " + error);
 				}
 
-				// Events.trigger('LocalReceiptsUpdated');
+				Events.trigger('RemoveLocalReceipt', saleKey);
 			});
 
 		}
 
 	}
 
-	updatePendingSale(saleKey, newSaleValue) {
+	// Update a pending sale
+	updatePendingSale(saleKey) {
 		console.log("PostStorage:updatePendingSale");
-		const index = this.pendingSales.indexOf(saleKey);
-		if (index > -1) {
-			this.pendingSales[index] = newSaleValue;
-			let keyArray = [[pendingSalesKey, this.stringify(this.pendingSales)]];
-			AsyncStorage.multiSet(keyArray).then(error => {
-				if (error) {
-					console.log("PosStorage:updatePendingSale: Error: " + error);
-				}
+		this.getKey(saleKey).then(receipt => {
+			receipt = JSON.parse(receipt);
+			receipt.active = 0;
+			receipt.products = receipt.products.map(rli => {
+				rli.active = 0;
+				return rli;
 			});
-
-		}
-
+			this.setKey(saleKey, this.stringify(receipt));
+		});
 	}
 
 	_loadPendingSale(saleKey) {
@@ -852,14 +850,14 @@ class PosStorage {
 		})
 		return customerTypesForDisplay;
 	}
-	
-	getCustomerTypes(){
+
+
+	getCustomerTypes() {
 		return this.customerTypes;
 	}
-
-	getCustomerTypeByName( name ){
-		for( let i = 0; i < this.customerTypes.length; i++ ){
-			if( this.customerTypes[i].name === name ){
+	getCustomerTypeByName(name) {
+		for (let i = 0; i < this.customerTypes.length; i++) {
+			if (this.customerTypes[i].name === name) {
 				return this.customerTypes[i];
 			}
 		}
@@ -993,6 +991,14 @@ class PosStorage {
 	saveRemoteReceipts(receipts = []) {
 		this.receipts = receipts;
 		this.setKey(remoteReceiptsKey, this.stringify(receipts));
+	}
+
+	addRemoteReceipts(receipts) {
+		this.receipts = this.getReceipts();
+		return this.setKey(remoteReceiptsKey, this.stringify([...this.receipts, ...receipts]))
+			.then(() => {
+				return [...this.receipts, ...receipts];
+			});
 	}
 
 	getRemoteReceipts() {

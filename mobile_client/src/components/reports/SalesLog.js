@@ -17,6 +17,7 @@ import * as receiptActions from "../../actions/ReceiptActions";
 import i18n from '../../app/i18n';
 import moment from 'moment';
 import PosStorage from '../../database/PosStorage';
+import Events from 'react-native-simple-events';
 
 class ReceiptLineItem extends Component {
     constructor(props) {
@@ -32,7 +33,7 @@ class ReceiptLineItem extends Component {
                     source={{ uri: this.getImage(this.props.item.product) }}
                     style={styles.productImage}>
                 </Image>
-                <View>
+                <View style={{justifyContent: 'space-around'}}>
                     <View style={styles.itemData}>
                         <Text style={styles.label}>Product SKU: </Text>
                         <Text>{this.props.item.product.sku}</Text>
@@ -76,10 +77,15 @@ class ReceiptLineItem extends Component {
     }
 
     getImage = item => {
-        if (item.base64encoded_image.startsWith('data:image')) {
-            return item.base64encoded_image;
+        const productImage = item.base64encodedImage || this.props.products.reduce((image, product) => {
+            if (product.productId === item.id) return product.base64encodedImage;
+            return image;
+        }, '');
+
+        if (productImage.startsWith('data:image')) {
+            return productImage;
         } else {
-            return 'data:image/png;base64,' + item.base64encoded_image
+            return 'data:image/png;base64,' + productImage
         }
     }
 }
@@ -95,6 +101,15 @@ class SalesLog extends Component {
 
     componentDidMount() {
         console.log("SalesLog - componentDidMount");
+		Events.on('RemoveLocalReceipt', 'RemoveLocalReceipt2', this.onRemoveLocalReceipt.bind(this));
+    }
+
+    componentWillUnmount() {
+		Events.rm('RemoveLocalReceipt', 'RemoveLocalReceipt2');
+    }
+
+    onRemoveLocalReceipt() {
+		this.setState({refresh: !this.state.refresh});
     }
 
     render() {
@@ -142,6 +157,7 @@ class SalesLog extends Component {
                 item={lineItem}
                 key={lineItem.id}
                 lineItemIndex={idx}
+                products={this.props.products}
                 handleUpdate={this.handleUpdate.bind(this)}
                 receiptIndex={item.index}></ReceiptLineItem>
         });
@@ -168,7 +184,7 @@ class SalesLog extends Component {
                 </View>
                 <View style={styles.itemData}>
                     <Text style={styles.label}>Date Created: </Text>
-                    <Text>{moment.utc(item.createdAt).format('YYYY-MM-DD hh:mm:ss')}</Text>
+                    <Text>{moment.utc(item.createdAt).format('YYYY-MM-DD HH:mm:ss')}</Text>
                 </View>
                 <View style={styles.itemData}>
                     <Text style={styles.label}>Customer Name: </Text>
@@ -202,12 +218,14 @@ class SalesLog extends Component {
     }
 
     deleteReceipt(item, updatedFields) {
+        this.props.receiptActions.updateRemoteReceipt(item.index, updatedFields);
+
         if (!item.isLocal) {
-            this.props.receiptActions.updateRemoteReceipt(item.index, updatedFields);
             PosStorage.saveRemoteReceipts(this.props.remoteReceipts);
         } else {
-            // this.props.receiptActions.updateLocalReceipt(item, updatedFields);            
+            PosStorage.updatePendingSale(item.id);
         }
+
 		this.setState({refresh: !this.state.refresh});
     }
 
@@ -219,9 +237,13 @@ class SalesLog extends Component {
                 createdAt: receipt.created_at,
                 customerAccount: receipt.customer_account,
                 receiptLineItems: receipt.receipt_line_items,
-                isLocal: false,
+                isLocal: receipt.isLocal || false,
                 index
             };
+        });
+
+        remoteReceipts.sort((a, b) => {
+            return moment.utc(a.createdAt).isBefore(b.createdAt) ? 1 : -1;
         });
 
         // let localReceipts = this.props.localReceipts.map((receipt, index) => {
@@ -331,7 +353,6 @@ const styles = StyleSheet.create({
     },
 
     itemData: {
-        flex: 1,
         flexDirection: 'row'
     }
 });

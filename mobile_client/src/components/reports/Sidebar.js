@@ -43,6 +43,10 @@ class Sidebar extends Component {
 		this.props.reportActions.setReportType("salesLog");
 	};
 
+	onSalesLog = () =>{
+		this.props.reportActions.setReportType("salesLog");
+	};
+
 	getSalesMenuStyle(){
 		return (this.props.reportType === "sales") ?
 			[styles.menuText, { color: "#3C93FC" }] :
@@ -56,6 +60,12 @@ class Sidebar extends Component {
 	}
 	getReminderMenuStyle() {
 		return (this.props.reportType === "reminders") ?
+			[styles.menuText, { color: "#3C93FC" }] :
+			[styles.menuText]
+	}
+
+	getSalesLogMenuStyle(){
+		return (this.props.reportType === "salesLog") ?
 			[styles.menuText, { color: "#3C93FC" }] :
 			[styles.menuText]
 	}
