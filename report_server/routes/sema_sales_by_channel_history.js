@@ -5,13 +5,6 @@ const semaLog = require('../seama_services/sema_logger');
 const { getMostRecentReceipt, getSalesChannels} = require('../seama_services/sql_services');
 
 
-
-// const sqlSalesByChannel = 'SELECT * \
-// 		FROM receipt \
-// 		WHERE receipt.kiosk_id = ? AND receipt.sales_channel_id = ? \
-// 		AND receipt.created_at BETWEEN ? AND ? \
-// 		ORDER BY receipt.created_at';
-
 const sqlSalesByChannelDay = 'SELECT YEAR(receipt.created_at), MONTH(receipt.created_at), DAY(receipt.created_at), SUM(receipt.total), SUM(receipt.cogs) \
 	FROM receipt \
 	WHERE receipt.kiosk_id = ? AND receipt.sales_channel_id = ? AND receipt.created_at BETWEEN ? AND ? \

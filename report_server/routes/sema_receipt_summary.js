@@ -11,11 +11,6 @@ const sqlSalesChannelSummary = 'SELECT SUM(volume), SUM(total), COUNT(receipt_id
 					WHERE  sales_channel_id  = ? AND kiosk_id = ? \
 					AND created_at BETWEEN ? AND ?';
 
-const sqlCustomerTypeSummary = 'SELECT SUM(volume)\
-					FROM receipt_details \
-					WHERE customer_type_id = ? AND kiosk_id = ? \
-					AND created_at BETWEEN ? AND ?';
-
 
 
 router.get('/', async( request, response ) => {

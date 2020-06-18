@@ -1,18 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const semaLog = require(`${__basedir}/seama_services/sema_logger`);
-// const R = require(`${__basedir}/models`).receipt;
-// const CustomerAccount = require(`${__basedir}/models`).customer_account;
-// const ReceiptLineItem = require(`${__basedir}/models`).receipt_line_item;
-// const Product = require(`${__basedir}/models`).product;
-// const Kiosk = require(`${__basedir}/models`).kiosk;
-// const CustomerType = require(`${__basedir}/models`).customer_type;
-// const SalesChannel = require(`${__basedir}/models`).sales_channel;
-// const ProductCategory = require(`${__basedir}/models`).product_category;
-
 
 const getAllKioskSalesSql = `
-SELECT 
+SELECT
     kiosk.name AS 'Kiosk',
     DATE_FORMAT(receipt.created_at, '%Y-%m-%d') AS Date,
     customer_account.name AS 'Customer Name',
@@ -50,7 +41,7 @@ ORDER BY
 `;
 
 const getAllKioskWQSql = `
-SELECT 
+SELECT
     kiosk.name AS 'Kiosk',
     DATE_FORMAT(reading.created_at, '%Y-%m-%d') AS Date,
     parameter.name as Parameter,
@@ -96,7 +87,7 @@ router.get('/', async (req, res) => {
 		semaLog.warn(`sema_data_export - Fetch - Error: ${JSON.stringify(err)}`);
 		return res.status(500).json({ msg: "Internal Server Error" });
     }
-    
+
     return res.json(results);
 });
 
@@ -134,7 +125,7 @@ module.exports = router;
     //     // 'receipt_line_item.product.price_amount',
     //     // 'receipt_line_item.price_total',
     // ];
-    
+
     // const [err, receipts] = await __hp(R.findAll({
     //     raw: true,
     //     // attributes: fields,

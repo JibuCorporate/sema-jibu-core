@@ -88,17 +88,17 @@ module.exports = models => {
 			created_at: values.created_at,
 			updated_at: values.updated_at,
 			wastageName: values.wastage_name,
-			base64Image: values.base64encoded_image,
-			productMrp: productMrp.map(p => ({
-				id: p.id,
-				active: p.active,
-				kioskId: p.kiosk_id,
-				priceAmount: p.price_amount,
-				priceCurrency: p.price_currency,
-				productId: p.product_id,
-				salesChannelId: p.sales_channel_id,
-				costOfGoods: p.cogs_amount
-			}))
+			base64Image: values.base64encoded_image
+			// productMrp: productMrp.map(p => ({
+			// 	id: p.id,
+			// 	active: p.active,
+			// 	kioskId: p.kiosk_id,
+			// 	priceAmount: p.price_amount,
+			// 	priceCurrency: p.price_currency,
+			// 	productId: p.product_id,
+			// 	salesChannelId: p.sales_channel_id,
+			// 	costOfGoods: p.cogs_amount
+			// }))
 		};
 	};
 

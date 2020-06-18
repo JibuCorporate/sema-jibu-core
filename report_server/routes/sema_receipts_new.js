@@ -1,19 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const semaLog = require('../seama_services/sema_logger');
-const bodyParser = require('body-parser');
-const Receipt = require('../model_layer/Receipt');
 const R = require(`${__basedir}/models`).receipt;
 const CustomerAccount = require(`${__basedir}/models`).customer_account;
 const ReceiptLineItem = require(`${__basedir}/models`).receipt_line_item;
-const receipt_payment_type = require(`${__basedir}/models`).receipt_payment_type;
-const payment_type = require('../models').payment_type;
 const Product = require(`${__basedir}/models`).product;
-const db = require('../models')
-const Sequelize = require('sequelize');
-const Op = Sequelize.Op
-const validator = require('validator');
-const moment = require('moment');
 
 router.get('/:siteId', (req, res) => {
 	var started = new Date();

@@ -1,10 +1,6 @@
-const request = require('supertest');
-const expect = require('chai').expect;
-const chai = require('chai');
 const express = require('express');
 const router = express.Router();
 const semaLog = require('../seama_services/sema_logger');
-const bodyParser = require('body-parser');
 const Product = require('../model_layer/Product');
 const productModal = require('../models').product;
 const list = require('./products/list');
@@ -36,7 +32,7 @@ router.put('/admin/:id' , async (req, res, next) => {
 		return res.json({ data });
 	})
 		.catch(next);
-}); 
+});
 
 router.post('/admin', async (req, res, next) => {
 	semaLog.info('Post Product - Enter');
@@ -44,7 +40,7 @@ router.post('/admin', async (req, res, next) => {
 		return res.json({ data, total });
 	})
 		.catch(next);
-}); 
+});
 
 router.get('/admin/:id', async (req, res, next) => {
 	semaLog.info('GET kiosk - Enter');

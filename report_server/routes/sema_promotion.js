@@ -4,7 +4,7 @@ const router = express.Router();
 const semaLog = require(`${__basedir}/seama_services/sema_logger`);
 const promotion = require('../models').promotion;
 const kiosk = require('../models').kiosk;
-const Op = Sequelize.Op
+
 /* GET Promotion in the database. */
 
 router.get('/', function (req, res) {

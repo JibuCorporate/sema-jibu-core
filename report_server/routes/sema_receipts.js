@@ -1,19 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const semaLog = require('../seama_services/sema_logger');
-const bodyParser = require('body-parser');
-const Receipt = require('../model_layer/Receipt');
 const R = require(`${__basedir}/models`).receipt;
 const CustomerAccount = require(`${__basedir}/models`).customer_account;
 const ReceiptLineItem = require(`${__basedir}/models`).receipt_line_item;
-const receipt_payment_type = require(`${__basedir}/models`).receipt_payment_type;
-const payment_type = require('../models').payment_type;
 const Product = require(`${__basedir}/models`).product;
-const db = require('../models')
-const Sequelize = require('sequelize');
-const Op = Sequelize.Op
-const validator = require('validator');
-const moment = require('moment');
+
 
 router.get('/:siteId', (req, res) => {
 	var started = new Date();
@@ -78,9 +70,6 @@ router.post('/', async (req, res) => {
 	semaLog.info('CREATE RECEIPT sema_receipts- Enter');
 	req.check("id", "id is missing").exists();
 	req.check("currency_code", "currency_code is missing").exists();
-	// req.check("customerId", "customerId is missing").exists();
-	// req.check("created_at", "created_at is missing").exists();
-	// req.check("siteId", "siteId is missing").exists();
 	req.check("payment_type", "payment_type is missing").exists();
 	req.check("sales_channel_id", "sales_channel_id is missing").exists();
 	req.check("sales_channel_id", "sales_channel_id is missing").exists();
